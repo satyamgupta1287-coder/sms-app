@@ -17,6 +17,7 @@ import androidx.core.app.NotificationCompat
 class ForwarderForegroundService : Service() {
 
     private val channelId = "sms_forwarder_channel"
+    private var pollingThread: Thread? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -25,7 +26,19 @@ class ForwarderForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (pollingThread == null || !pollingThread!!.isAlive) {
+            pollingThread = Thread {
+                TelegramForwarder.startPolling(this)
+            }
+            pollingThread?.start()
+        }
         return START_STICKY
+    }
+
+    override fun onDestroy() {
+        TelegramForwarder.stopPolling()
+        pollingThread?.interrupt()
+        super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

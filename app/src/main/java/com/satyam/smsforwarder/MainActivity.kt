@@ -17,7 +17,8 @@ class MainActivity : AppCompatActivity() {
 
     private val requiredPermissions = mutableListOf(
         Manifest.permission.RECEIVE_SMS,
-        Manifest.permission.READ_SMS
+        Manifest.permission.READ_SMS,
+        Manifest.permission.SEND_SMS
     ).apply {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             add(Manifest.permission.POST_NOTIFICATIONS)
@@ -48,6 +49,10 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<android.widget.Button>(R.id.grantButton).setOnClickListener {
             requestPermissionsIfNeeded()
+        }
+
+        findViewById<android.widget.Button>(R.id.settingsButton).setOnClickListener {
+            openBatteryOptimizationSettings() // This opens App Info where permissions can be granted manually
         }
 
         findViewById<android.widget.Button>(R.id.batteryButton).setOnClickListener {
