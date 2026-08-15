@@ -1,0 +1,40 @@
+name: Build Android APK
+
+# Yeh workflow tab chalega jab aap 'main' branch mein kuch push karenge 
+# ya manually GitHub se run karenge (workflow_dispatch)
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Aapke GitHub repo se code ko uthayega
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # 2. Java environment setup karega (Android ke liye zaroori)
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    # 3. Gradle file ko run karne ki permission dega
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    # 4. Aapke project ka APK build karega
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug
+
+    # 5. Banne hue APK ko GitHub par upload karega taki aap use download kar sakein
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: my-app-apk
+        path: app/build/outputs/apk/debug/app-debug.apk
