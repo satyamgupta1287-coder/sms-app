@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "128427789823",
+    "project_id": "sms-web-53324",
+    "storage_bucket": "sms-web-53324.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:128427789823:android:570d75f93792aad183abca",
+        "android_client_info": {
+          "package_name": "com.aistudio.smsforwarder.jrxkqp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlX9ADHhf6j-55Gb9ErtdjlknhYqEtXHs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
