@@ -18,11 +18,52 @@ object FirebaseForwarder {
     private val database = FirebaseDatabase.getInstance()
     private val incomingRef = database.getReference("messages/incoming")
     private val outgoingRef = database.getReference("messages/outgoing")
+    private val devicesRef = database.getReference("devices")
 
     @Volatile var isPolling = false
     private var listener: ValueEventListener? = null
+    
+    private var myDeviceId: String = ""
+    private var myDeviceName: String = ""
+
+    private fun initDevice(context: Context) {
+        if (myDeviceId.isEmpty()) {
+            myDeviceId = android.provider.Settings.Secure.getString(
+                context.contentResolver, 
+                android.provider.Settings.Secure.ANDROID_ID
+            ) ?: "unknown_device"
+            myDeviceName = android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL
+        }
+    }
+
+    private fun setupPresence(context: Context) {
+        initDevice(context)
+        val myDeviceRef = devicesRef.child(myDeviceId)
+        
+        // Firebase Presence system
+        val connectedRef = database.getReference(".info/connected")
+        connectedRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val connected = snapshot.getValue(Boolean::class.java) ?: false
+                if (connected) {
+                    // When device disconnects, set status to offline
+                    myDeviceRef.child("status").onDisconnect().setValue("offline")
+                    myDeviceRef.child("lastActive").onDisconnect().setValue(com.google.firebase.database.ServerValue.TIMESTAMP)
+                    
+                    // Set status to online now
+                    myDeviceRef.setValue(mapOf(
+                        "name" to myDeviceName,
+                        "status" to "online",
+                        "lastActive" to System.currentTimeMillis()
+                    ))
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {}
+        })
+    }
 
     fun send(context: Context, sender: String, body: String) {
+        initDevice(context)
         val timestamp = DateFormat.format("dd MMM yyyy, hh:mm a", Date()).toString()
         val timestampMillis = System.currentTimeMillis()
         
@@ -30,7 +71,9 @@ object FirebaseForwarder {
             "sender" to sender,
             "body" to body,
             "timestamp" to timestamp,
-            "timestampMillis" to timestampMillis
+            "timestampMillis" to timestampMillis,
+            "deviceId" to myDeviceId,
+            "deviceName" to myDeviceName
         )
 
         incomingRef.push().setValue(messageData)
@@ -46,13 +89,21 @@ object FirebaseForwarder {
         if (isPolling) return
         isPolling = true
         
+        initDevice(context)
+        setupPresence(context)
+        
         Log.d("FirebaseForwarder", "Started listening for outgoing messages")
 
         listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 for (child in snapshot.children) {
                     val status = child.child("status").getValue(String::class.java)
-                    if (status == "pending") {
+                    val targetDevice = child.child("targetDeviceId").getValue(String::class.java)
+                    
+                    // Only process messages targeting this device (or messages without a target for backward compatibility)
+                    val isForMe = targetDevice == myDeviceId || targetDevice == null
+                    
+                    if (status == "pending" && isForMe) {
                         val number = child.child("number").getValue(String::class.java)
                         val messageText = child.child("body").getValue(String::class.java)
                         
