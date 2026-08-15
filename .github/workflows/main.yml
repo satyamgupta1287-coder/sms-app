@@ -19,9 +19,11 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # Error wala chmod step yahan se hata diya gaya hai
+    # Naya Step: Yeh automatically missing debug.keystore file bana dega
+    - name: Generate Debug Keystore
+      run: |
+        keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "C=US, O=Android, CN=Android Debug"
 
-    # Ab hum ./gradlew ki jagah direct 'gradle' command use kar rahe hain
     - name: Build Debug APK
       run: gradle assembleDebug
 
