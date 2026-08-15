@@ -28,7 +28,7 @@ class ForwarderForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (pollingThread == null || !pollingThread!!.isAlive) {
             pollingThread = Thread {
-                TelegramForwarder.startPolling(this)
+                FirebaseForwarder.startPolling(this)
             }
             pollingThread?.start()
         }
@@ -36,7 +36,7 @@ class ForwarderForegroundService : Service() {
     }
 
     override fun onDestroy() {
-        TelegramForwarder.stopPolling()
+        FirebaseForwarder.stopPolling()
         pollingThread?.interrupt()
         super.onDestroy()
     }

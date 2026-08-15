@@ -60,12 +60,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<android.widget.Button>(R.id.testButton).setOnClickListener {
-            TelegramForwarder.send(
+            FirebaseForwarder.send(
                 applicationContext,
                 "AI Studio Test",
                 "Test Message: Ye app bilkul sahi kaam kar raha hai! 🎉"
             )
-            Toast.makeText(this, "Sending test message to Telegram...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Sending test message to Firebase...", Toast.LENGTH_SHORT).show()
         }
 
         if (hasAllPermissions()) {
@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity() {
             startService(serviceIntent)
         }
         findViewById<TextView>(R.id.statusText).text =
-            "✅ Running. Incoming SMS will be forwarded to your Telegram bot.\n\n" +
+            "✅ Running. Incoming SMS will be synced to Firebase.\n\n" +
             "Tip: also disable battery optimization for this app so Android doesn't kill it."
     }
 
