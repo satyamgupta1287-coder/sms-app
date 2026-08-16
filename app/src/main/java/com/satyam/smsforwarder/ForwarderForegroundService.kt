@@ -17,7 +17,6 @@ import androidx.core.app.NotificationCompat
 class ForwarderForegroundService : Service() {
 
     private val channelId = "sms_forwarder_channel"
-    private var pollingThread: Thread? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -26,18 +25,37 @@ class ForwarderForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (pollingThread == null || !pollingThread!!.isAlive) {
-            pollingThread = Thread {
-                FirebaseForwarder.startPolling(this)
-            }
-            pollingThread?.start()
-        }
+        FirebaseForwarder.startPolling(this)
         return START_STICKY
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        val restartServiceIntent = Intent(applicationContext, ForwarderForegroundService::class.java)
+        restartServiceIntent.setPackage(packageName)
+        
+        val restartServicePendingIntent = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            android.app.PendingIntent.getForegroundService(
+                this, 1, restartServiceIntent,
+                android.app.PendingIntent.FLAG_ONE_SHOT or android.app.PendingIntent.FLAG_IMMUTABLE
+            )
+        } else {
+            android.app.PendingIntent.getService(
+                this, 1, restartServiceIntent,
+                android.app.PendingIntent.FLAG_ONE_SHOT or android.app.PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+        
+        val alarmService = getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager
+        alarmService.set(
+            android.app.AlarmManager.ELAPSED_REALTIME,
+            android.os.SystemClock.elapsedRealtime() + 1000,
+            restartServicePendingIntent
+        )
+        super.onTaskRemoved(rootIntent)
     }
 
     override fun onDestroy() {
         FirebaseForwarder.stopPolling()
-        pollingThread?.interrupt()
         super.onDestroy()
     }
 
